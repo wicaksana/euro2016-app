@@ -10,6 +10,5 @@ public class Euro2016AppApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(Euro2016AppApplication.class, args);
 	}
-	
-	// Todo: write unit test
+
 }

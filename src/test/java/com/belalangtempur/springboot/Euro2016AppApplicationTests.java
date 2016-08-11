@@ -1,7 +1,9 @@
 package com.belalangtempur.springboot;
 
+import com.belalangtempur.springboot.domain.EuroMatch;
 import com.belalangtempur.springboot.domain.Player;
 import com.belalangtempur.springboot.domain.Team;
+import com.belalangtempur.springboot.repository.EuroMatchRepository;
 import com.belalangtempur.springboot.repository.PlayerRepository;
 import com.belalangtempur.springboot.repository.TeamRepository;
 
@@ -9,19 +11,16 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.mock.http.MockHttpOutputMessage;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,9 +42,11 @@ public class Euro2016AppApplicationTests {
 	private PlayerRepository playerRepository;
     @Autowired
     private TeamRepository teamRepository;
-    private Player player;
-    private Team team;
+    @Autowired
+    private EuroMatchRepository euroMatchRepository;
+    private List<Team> teams = new ArrayList<>();
     private List<Player> players = new ArrayList<>();
+    private EuroMatch match;
 
     @Autowired
     private WebApplicationContext webApplicationContext;
@@ -70,8 +71,12 @@ public class Euro2016AppApplicationTests {
     public void setup() throws Exception {
         this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
         this.playerRepository.deleteAllInBatch(); // ??
+        this.euroMatchRepository.deleteAllInBatch();
         this.teamRepository.deleteAllInBatch();
-        this.team = teamRepository.save(new Team("France"));
+        System.out.println("initiate teams..");
+        this.teams.add(teamRepository.save(new Team("France")));
+        this.teams.add(teamRepository.save(new Team("Portugal")));
+        System.out.println("initiate players..");
         this.players.add(playerRepository.save(new Player("Antoine Griezmann",
                                                           teamRepository.findByName("France"),
                                                           "1991-03-21",
@@ -81,16 +86,25 @@ public class Euro2016AppApplicationTests {
                                                           "Atlético",
                                                           "2014-03-05")));
 
-        this.players.add(playerRepository.save(new Player("Dmitri Payet",
-                                                            teamRepository.findByName("France"),
-                                                            "1987-03-21",
-                                                            175,
-                                                            77,
+        this.players.add(playerRepository.save(new Player("Renato Sanches",
+                                                            teamRepository.findByName("Portugal"),
+                                                            "1997-08-18",
+                                                            176,
+                                                            70,
                                                             "Midfield",
-                                                            "West Ham",
-                                                            "2010-03-05")));
+                                                            "Bayern Muenchen",
+                                                            "2016-03-25")));
+        System.out.println("initiate match..");
+        this.match = euroMatchRepository.save(new EuroMatch(teamRepository.findByName("France"),
+                                                    teamRepository.findByName("Portugal"),
+                                                    "2016-07-10",
+                                                    "Final",
+                                                    "Stade de France, Saint-Denis"));
     }
 
+    /*******************************************************************************************************************
+     * Player
+     *******************************************************************************************************************/
     /**
      * The result should match with the predetermined test input
      * @throws Exception
@@ -109,7 +123,17 @@ public class Euro2016AppApplicationTests {
                 .andExpect(jsonPath("$[0].weight", is(this.players.get(0).getWeight())))
                 .andExpect(jsonPath("$[0].position", is(this.players.get(0).getPosition())))
                 .andExpect(jsonPath("$[0].club", is(this.players.get(0).getClub())))
-                .andExpect(jsonPath("$[0].debut", is(this.players.get(0).getDebut())));
+                .andExpect(jsonPath("$[0].debut", is(this.players.get(0).getDebut())))
+                // second player
+                .andExpect(jsonPath("$[1].id", is(this.players.get(1).getId().intValue())))
+                .andExpect(jsonPath("$[1].team.id", is(this.players.get(1).getTeam().getId().intValue())))
+                .andExpect(jsonPath("$[1].team.name", is(this.players.get(1).getTeam().getName())))
+                .andExpect(jsonPath("$[1].dob", is(this.players.get(1).getDob())))
+                .andExpect(jsonPath("$[1].height", is(this.players.get(1).getHeight())))
+                .andExpect(jsonPath("$[1].weight", is(this.players.get(1).getWeight())))
+                .andExpect(jsonPath("$[1].position", is(this.players.get(1).getPosition())))
+                .andExpect(jsonPath("$[1].club", is(this.players.get(1).getClub())))
+                .andExpect(jsonPath("$[1].debut", is(this.players.get(1).getDebut())));
     }
 
     /**
@@ -132,6 +156,10 @@ public class Euro2016AppApplicationTests {
                 .andExpect(jsonPath("$.debut", is(this.players.get(0).getDebut())));
     }
 
+    /*******************************************************************************************************************
+     * Team
+     *******************************************************************************************************************/
+
     /**
      * The result should match all teams
      * @throws Exception
@@ -141,28 +169,65 @@ public class Euro2016AppApplicationTests {
         mockMvc.perform(get("/teams"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(contentType))
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id", is(this.team.getId().intValue())))
-                .andExpect(jsonPath("$[0].name", is(this.team.getName())));
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].id", is(this.teams.get(0).getId().intValue())))
+                .andExpect(jsonPath("$[0].name", is(this.teams.get(0).getName())))
+                // second team
+                .andExpect(jsonPath("$[1].id", is(this.teams.get(1).getId().intValue())))
+                .andExpect(jsonPath("$[1].name", is(this.teams.get(1).getName())));
+
     }
 
     /**
-     * test /team/{id}
+     * test /team/{id} using 'france'
      * @throws Exception
      */
     @Test
     public void readTeam() throws Exception {
-        mockMvc.perform(get("/team/" + this.team.getId().intValue()))
+        mockMvc.perform(get("/team/" + this.teams.get(0).getId().intValue()))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.id", is(this.team.getId().intValue())))
-            .andExpect(jsonPath("$.name", is(this.team.getName())));
+            .andExpect(jsonPath("$.id", is(this.teams.get(0).getId().intValue())))
+            .andExpect(jsonPath("$.name", is(this.teams.get(0).getName())));
     }
 
     @Test
     public void readPlayersFromATeam() throws Exception {
-        mockMvc.perform(get("/team/" + this.team.getId().intValue() + "/players"))
+        mockMvc.perform(get("/team/" + this.teams.get(0).getId().intValue() + "/players"))
             .andExpect(status().isOk())
             .andExpect(content().contentType(contentType))
-            .andExpect(jsonPath("$", hasSize(2)));
+            .andExpect(jsonPath("$", hasSize(1)));
     }
+
+    /*******************************************************************************************************************
+     * EuroMatch
+     *******************************************************************************************************************/
+    @Test
+    public void readMatches() throws Exception {
+        mockMvc.perform(get("/matches/"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(contentType))
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].team1.id", is(this.match.getTeam1().getId().intValue())))
+                .andExpect(jsonPath("$[0].team1.name", is(this.match.getTeam1().getName())))
+                .andExpect(jsonPath("$[0].team2.id", is(this.match.getTeam2().getId().intValue())))
+                .andExpect(jsonPath("$[0].team2.name", is(this.match.getTeam2().getName())))
+                .andExpect(jsonPath("$[0].date", is(this.match.getDate())))
+                .andExpect(jsonPath("$[0].phase", is(this.match.getPhase())))
+                .andExpect(jsonPath("$[0].stadium", is(this.match.getStadium())));
+    }
+
+    @Test
+    public void readMatch() throws Exception {
+        mockMvc.perform(get("/match/" + this.match.getId().intValue()))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(contentType))
+                .andExpect(jsonPath("$.team1.id", is(this.match.getTeam1().getId().intValue())))
+                .andExpect(jsonPath("$.team1.name", is(this.match.getTeam1().getName())))
+                .andExpect(jsonPath("$.team2.id", is(this.match.getTeam2().getId().intValue())))
+                .andExpect(jsonPath("$.team2.name", is(this.match.getTeam2().getName())))
+                .andExpect(jsonPath("$.date", is(this.match.getDate())))
+                .andExpect(jsonPath("$.phase", is(this.match.getPhase())))
+                .andExpect(jsonPath("$.stadium", is(this.match.getStadium())));
+    }
+
 }
