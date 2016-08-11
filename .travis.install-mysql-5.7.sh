@@ -5,3 +5,4 @@ sudo apt-get update -q
 sudo apt-get install -q -y -o Dpkg::Options::=--force-confnew mysql-server
 sudo mysql_upgrade -u root
 sudo service mysql restart
+mysql -u root -e "CREATE DATABASE euro2016"
