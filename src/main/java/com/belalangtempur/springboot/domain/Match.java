@@ -9,7 +9,8 @@ import java.util.Date;
  * Created by arif on 3-8-16.
  */
 @Entity
-public class EuroMatch {
+@Table(name = "\"match\"")
+public class Match {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     Long id;
@@ -24,7 +25,7 @@ public class EuroMatch {
     @Transient
     private final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
 
-    public EuroMatch(Team team1, Team team2, String date, String phase, String stadium) throws ParseException {
+    public Match(Team team1, Team team2, String date, String phase, String stadium) throws ParseException {
         this.team1 = team1;
         this.team2 = team2;
         this.date = format.parse(date);
@@ -32,7 +33,7 @@ public class EuroMatch {
         this.stadium = stadium;
     }
 
-    public EuroMatch() {}
+    public Match() {}
 
     public Long getId() {
         return id;

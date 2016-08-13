@@ -1,9 +1,11 @@
 package com.belalangtempur.springboot;
 
-import com.belalangtempur.springboot.domain.EuroMatch;
+import com.belalangtempur.springboot.domain.Match;
+import com.belalangtempur.springboot.domain.Goal;
 import com.belalangtempur.springboot.domain.Player;
 import com.belalangtempur.springboot.domain.Team;
-import com.belalangtempur.springboot.repository.EuroMatchRepository;
+import com.belalangtempur.springboot.repository.MatchRepository;
+import com.belalangtempur.springboot.repository.GoalRepository;
 import com.belalangtempur.springboot.repository.PlayerRepository;
 import com.belalangtempur.springboot.repository.TeamRepository;
 
@@ -43,10 +45,14 @@ public class Euro2016AppApplicationTests {
     @Autowired
     private TeamRepository teamRepository;
     @Autowired
-    private EuroMatchRepository euroMatchRepository;
+    private MatchRepository matchRepository;
+    @Autowired
+    private GoalRepository goalRepository;
+
     private List<Team> teams = new ArrayList<>();
     private List<Player> players = new ArrayList<>();
-    private EuroMatch match;
+    private Match match;
+    private List<Goal> goals = new ArrayList<>();
 
     @Autowired
     private WebApplicationContext webApplicationContext;
@@ -70,8 +76,9 @@ public class Euro2016AppApplicationTests {
     @Before
     public void setup() throws Exception {
         this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+        this.goalRepository.deleteAllInBatch();
         this.playerRepository.deleteAllInBatch(); // ??
-        this.euroMatchRepository.deleteAllInBatch();
+        this.matchRepository.deleteAllInBatch();
         this.teamRepository.deleteAllInBatch();
         System.out.println("initiate teams..");
         this.teams.add(teamRepository.save(new Team("France")));
@@ -86,20 +93,24 @@ public class Euro2016AppApplicationTests {
                                                           "Atlético",
                                                           "2014-03-05")));
 
-        this.players.add(playerRepository.save(new Player("Renato Sanches",
+        this.players.add(playerRepository.save(new Player("Éder",
                                                             teamRepository.findByName("Portugal"),
-                                                            "1997-08-18",
-                                                            176,
-                                                            70,
-                                                            "Midfield",
-                                                            "Bayern Muenchen",
-                                                            "2016-03-25")));
-        System.out.println("initiate match..");
-        this.match = euroMatchRepository.save(new EuroMatch(teamRepository.findByName("France"),
+                                                            "1987-12-22",
+                                                            188,
+                                                            81,
+                                                            "Forward",
+                                                            "Lille OSC",
+                                                            "2012-09-11")));
+
+        this.match = matchRepository.save(new Match(teamRepository.findByName("France"),
                                                     teamRepository.findByName("Portugal"),
                                                     "2016-07-10",
                                                     "Final",
                                                     "Stade de France, Saint-Denis"));
+
+        this.goals.add(goalRepository.save(new Goal(playerRepository.findByName("Éder"),
+                                                    matchRepository.findByPhase("Final").get(0),  // there is only 1 final, right?
+                                                    109)));
     }
 
     /*******************************************************************************************************************
@@ -199,7 +210,7 @@ public class Euro2016AppApplicationTests {
     }
 
     /*******************************************************************************************************************
-     * EuroMatch
+     * Match
      *******************************************************************************************************************/
     @Test
     public void readMatches() throws Exception {
@@ -217,7 +228,7 @@ public class Euro2016AppApplicationTests {
     }
 
     @Test
-    public void readMatch() throws Exception {
+    public void readAMatch() throws Exception {
         mockMvc.perform(get("/match/" + this.match.getId().intValue()))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(contentType))
@@ -230,4 +241,47 @@ public class Euro2016AppApplicationTests {
                 .andExpect(jsonPath("$.stadium", is(this.match.getStadium())));
     }
 
+    @Test
+    public void readGoalsInAMatch() throws Exception {
+        mockMvc.perform(get("/match/" + this.match.getId().intValue() + "/goals"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].id", is(this.goals.get(0).getId().intValue())))
+                .andExpect(jsonPath("$[0].scorer.id", is(this.goals.get(0).getScorer().getId().intValue())))
+                .andExpect(jsonPath("$[0].scorer.name", is(this.goals.get(0).getScorer().getName())))
+                .andExpect(jsonPath("$[0].match.id", is(this.goals.get(0).getMatch().getId().intValue())))
+                .andExpect(jsonPath("$[0].match.phase", is(this.goals.get(0).getMatch().getPhase())))
+                .andExpect(jsonPath("$[0].minute", is(this.goals.get(0).getMinute())));
+
+    }
+
+    /*******************************************************************************************************************
+     * Goal
+     *******************************************************************************************************************/
+    @Test
+    public void readGoals() throws Exception {
+        mockMvc.perform(get("/goals/"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(contentType))
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].id", is(this.goals.get(0).getId().intValue())))
+                .andExpect(jsonPath("$[0].scorer.id", is(this.goals.get(0).getScorer().getId().intValue())))
+                .andExpect(jsonPath("$[0].scorer.name", is(this.goals.get(0).getScorer().getName())))
+                .andExpect(jsonPath("$[0].match.id", is(this.goals.get(0).getMatch().getId().intValue())))
+                .andExpect(jsonPath("$[0].match.phase", is(this.goals.get(0).getMatch().getPhase())))
+                .andExpect(jsonPath("$[0].minute", is(this.goals.get(0).getMinute())));
+    }
+
+    @Test
+    public void readAGoal() throws Exception {
+        mockMvc.perform(get("/goal/" + this.goals.get(0).getId().intValue()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(this.goals.get(0).getId().intValue())))
+                .andExpect(jsonPath("$.scorer.id", is(this.goals.get(0).getScorer().getId().intValue())))
+                .andExpect(jsonPath("$.scorer.name", is(this.goals.get(0).getScorer().getName())))
+                .andExpect(jsonPath("$.match.id", is(this.goals.get(0).getMatch().getId().intValue())))
+                .andExpect(jsonPath("$.match.phase", is(this.goals.get(0).getMatch().getPhase())))
+                .andExpect(jsonPath("$.minute", is(this.goals.get(0).getMinute())));
+
+    }
 }

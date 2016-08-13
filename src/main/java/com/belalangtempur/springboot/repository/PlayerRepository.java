@@ -8,4 +8,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
  */
 public interface PlayerRepository extends JpaRepository<Player, Long> {
     Player findById(Long id);
+    Player findByName(String name);
 }

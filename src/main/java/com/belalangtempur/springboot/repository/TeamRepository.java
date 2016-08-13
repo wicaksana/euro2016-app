@@ -13,7 +13,9 @@ import java.util.List;
  */
 public interface TeamRepository extends JpaRepository<Team, Long> {
     Team findByName(String name);
+
     Team findById(Long id);
+
     @Query("SELECT p FROM Player p WHERE p.team.id = :teamId")
     List<Player> findPlayers(@Param("teamId") Long teamId);
 }
