@@ -5,6 +5,7 @@ import com.belalangtempur.springboot.domain.Team;
 import com.belalangtempur.springboot.repository.TeamRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -25,18 +26,34 @@ public class TeamController {
      * @return
      */
     @RequestMapping(value = "/teams", method = RequestMethod.GET)
-    public @ResponseBody List<Team> getTeams() {
-        return repo.findAll();
+    public String getTeams(Model model) {
+
+        List<Team> teamList =  repo.findAll();
+        if (teamList != null) {
+            model.addAttribute("teams", teamList);
+        }
+        return "teams";
     }
 
+    /**
+     * return data related to a specific team
+     * @param teamId
+     * @param model
+     * @return team information, list of players
+     */
     @RequestMapping(value = "/team/{teamId}", method = RequestMethod.GET)
-    public @ResponseBody Team getTeam(@PathVariable Long teamId) {
-        return repo.findById(teamId);
-    }
+    public String getTeam(@PathVariable Long teamId, Model model) {
 
-    @RequestMapping(value = "/team/{teamId}/players", method = RequestMethod.GET)
-    public @ResponseBody List<Player> getPlayersOfATeam(@PathVariable Long teamId) {
-        return repo.findPlayers(teamId);
-    }
+        Team team =  repo.findById(teamId);
+        if (team != null) {
+            model.addAttribute("team", team);
+        }
 
+        List<Player> playerList = repo.findPlayers(teamId);
+        if(playerList != null) {
+            model.addAttribute("players", playerList);
+        }
+
+        return "team";
+    }
 }

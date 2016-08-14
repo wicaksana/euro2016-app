@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8" />
+    <title>Euro 2016 Players</title>
+</head>
+<body>
+    <h2>Player List:</h2>
+    <div th:unless="${#lists.isEmpty(players)}">
+    <dl th:each="player: ${players}">
+        <dt>
+            <span th:text="${player.name}">Team</span>
+        </dt>
+    </dl>
+</div>
+</body>
+</html>

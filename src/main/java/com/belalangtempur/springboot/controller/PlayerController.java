@@ -4,6 +4,7 @@ import com.belalangtempur.springboot.domain.Player;
 import com.belalangtempur.springboot.repository.PlayerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,8 +22,13 @@ public class PlayerController {
      * @return
      */
     @RequestMapping(value = "/players", method = RequestMethod.GET)
-    public @ResponseBody List<Player> getAllPlayers() {
-        return repo.findAll();
+    public String getAllPlayers(Model model) {
+
+        List<Player> playerList = repo.findAll();
+        if(playerList != null) {
+            model.addAttribute("players", playerList);
+        }
+        return "players";
     }
 
     /**
@@ -31,8 +37,12 @@ public class PlayerController {
      * @return
      */
     @RequestMapping(value = "/player/{playerId}", method = RequestMethod.GET)
-    public @ResponseBody Player getPlayer(@PathVariable Long playerId) {
-        return repo.findById(playerId);
+    public String getPlayer(@PathVariable Long playerId, Model model) {
+        Player player = repo.findById(playerId);
+        if(player != null) {
+            model.addAttribute("player", player);
+        }
+        return "player";
     }
 
 }

@@ -5,6 +5,7 @@ import com.belalangtempur.springboot.domain.Match;
 import com.belalangtempur.springboot.repository.MatchRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -25,14 +26,22 @@ public class MatchController {
      * @return list of all matches
      */
     @RequestMapping(value = "/matches", method = RequestMethod.GET)
-    public @ResponseBody List<Match> getAllMatches() {
-        return repo.findAll();
+    public String getAllMatches(Model model) {
+        List<Match> matchList = repo.findAll();
+        if(matchList != null) {
+            model.addAttribute("matches", matchList);
+        }
+        return "matches";
     }
 
 
     @RequestMapping(value = "/match/{matchId}", method = RequestMethod.GET)
-    public @ResponseBody Match getMatch(@PathVariable Long matchId) {
-        return repo.findById(matchId);
+    public String getMatch(@PathVariable Long matchId, Model model) {
+         Match match = repo.findById(matchId);
+        if(match != null) {
+            model.addAttribute("match", match);
+        }
+        return "match";
     }
 
     /**
