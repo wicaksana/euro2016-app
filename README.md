@@ -4,7 +4,7 @@
 
 ## Introduction
 
-This is a Euro 2016 app, inspired by [UEFA Euro 2016](http://www.uefa.com/uefaeuro/index.html)
+This is a RESTful Euro 2016 app, inspired by [UEFA Euro 2016](http://www.uefa.com/uefaeuro/index.html)
 
 
 ## REST endpoints
