@@ -1,6 +1,6 @@
 # Euro 2016 Statistics Application (On-progress)
 
-[![Build Status](https://travis-ci.org/wicaksana/euro2016-app.svg?branch=master)](https://travis-ci.org/wicaksana/euro2016-app)
+[![Build Status](https://travis-ci.org/wicaksana/euro2016-app.svg?branch=restful)](https://travis-ci.org/wicaksana/euro2016-app)
 
 ## Introduction
 
